@@ -1,0 +1,222 @@
+index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EbooksCentralHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to EbooksCentralHub</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="signup.html">Sign Up</a></li>
+                <li><a href="shop.html">Shop</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Our Collection of Ebooks</h2>
+        <div id="ebooks">
+            <!-- Ebooks will be dynamically loaded here -->
+        </div>
+    </main>
+    <script src="scripts.js"></script>
+</body>
+</html>
+styles.css
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 1rem;
+    text-align: center;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 1rem;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+
+main {
+    padding: 1rem;
+}
+
+#ebooks {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#ebooks div {
+    border: 1px solid #ccc;
+    margin: 0.5rem;
+    padding: 0.5rem;
+    width: calc(33% - 1rem);
+}
+script.js
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/ebooks')
+        .then(response => response.json())
+        .then(data => {
+            const ebooksDiv = document.getElementById('ebooks');
+            data.ebooks.forEach(ebook => {
+                const ebookDiv = document.createElement('div');
+                ebookDiv.innerHTML = `<h3>${ebook.title}</h3><p>${ebook.author}</p><p>${ebook.price}</p>`;
+                ebooksDiv.appendChild(ebookDiv);
+            });
+        })
+        .catch(error => console.error('Error fetching ebooks:', error));
+});
+server.js
+const express = require('express');
+const stripe = require('stripe')('sk_test_51PhUdwGVnP0Fr7K89OZ8LAmuOq2BV5cuk1v83AdCUfOSadJG3NXk8APMJkVniwnKfJcEp5xuZH3aWBOSwVO4zHx200VKujUbO1');
+const bodyParser = require('body-parser');
+const app = express();
+const port = 3000;
+
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
+app.get('/ebooks', (req, res) => {
+    const ebooks = [
+        { title: 'Ebook 1', author: 'Author 1', price: '$10' },
+        { title: 'Ebook 2', author: 'Author 2', price: '$15' },
+        { title: 'Ebook 3', author: 'Author 3', price: '$20' }
+    ];
+    res.json({ ebooks });
+});
+
+app.post('/create-checkout-session', async (req, res) => {
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+            {
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: 'Ebook Purchase',
+                    },
+                    unit_amount: 2000,
+                },
+                quantity: 1,
+            },
+        ],
+        mode: 'payment',
+        success_url: 'http://localhost:3000/success.html',
+        cancel_url: 'http://localhost:3000/cancel.html',
+    });
+    res.json({ id: session.id });
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
+firebase-config.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDN7DsqVj...",
+    authDomain: "ebooks-central-hub.firebaseapp.com",
+    projectId: "ebooks-central-hub",
+    storageBucket: "ebooks-central-hub.appspot.com",
+    messagingSenderId: "268303100070",
+    appId: "1:268303100070:web:30b9069172fe8c528eac67",
+    measurementId: "G-95QR7K13M8"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+document.getElementById('signup').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            console.log('User signed up:', userCredential.user);
+        })
+        .catch((error) => {
+            console.error('Error signing up:', error);
+        });
+});
+
+document.getElementById('login').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            console.log('User logged in:', userCredential.user);
+        })
+        .catch((error) => {
+            console.error('Error logging in:', error);
+        });
+});
+README.md
+# EbooksCentralHub
+
+## Setup Instructions
+
+### Frontend
+
+1. Create the following files:
+    - `index.html`
+    - `styles.css`
+    - `scripts.js`
+
+### Backend
+
+1. Create a `server.js` file with the provided code.
+2. Install the necessary packages:
+    ```sh
+    npm install express stripe body-parser
+    ```
+3. Run the server:
+    ```sh
+    node server.js
+    ```
+
+### Firebase Configuration
+
+1. Create a `firebase-config.js` file with the provided code.
+2. Add your Firebase project configuration.
+
+### Deployment
+
+1. Upload all files to your GitHub repository.
+2. Deploy your backend using a service like Heroku.
+3. Ensure your frontend and backend are properly connected.
+
+### Features
+
+- User authentication with Firebase
+- Payment processing with Stripe
+- Dynamic eBook listing
+
+### Future Enhancements
+
+- Email marketing integration
+- Search functionality for eBooks
+- Printable coloring pages
+
+
